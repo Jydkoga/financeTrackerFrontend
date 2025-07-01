@@ -1,75 +1,66 @@
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { currentUser } from "../stores/user.js";
+  import { goto } from "$app/navigation";
+  import CreateProfile from "./CreateProfile/+page.svelte";
+  import CreateTransactionGroup from "./CreateTransactionGroup/+page.svelte";
+  import { get } from "svelte/store";
+  import AddTransaction from "./AddTransaction.svelte";
 
-  let username = "";
-  let amount = 0;
-  let userExistsMessage = "";
+  let transactionGroups = [];
 
-  async function createProfile(event) {
-    event.preventDefault();
+  let selectedTransactionGroupId = "";
 
-    try {
-      // First, check if the user already exists
-      const checkResponse = await fetch(
-        `http://localhost:8000/users/lookup?username=${encodeURIComponent(username)}`,
-      );
-
-      if (checkResponse.status === 200) {
-        const existingUser = await checkResponse.json();
-        if (existingUser && !existingUser.error) {
-          console.log("i got here");
-          userExistsMessage = "User already exists";
-          return; // Exit early if user exists
-        }
-      }
-
-      userExistsMessage = ""; // Clear previous message
-
-      const response = await fetch("http://localhost:8000/users/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: username, total_balance: amount }),
-      });
-      const data = await response.json();
-      console.log("Server response:", data);
-    } catch (error) {
-      console.error("Error checking or creating user:", error);
+  function goToTransactionGroup() {
+    if (selectedTransactionGroupId) {
+      goto(`/TransactionGroup/${selectedTransactionGroupId}`);
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     console.log("FinanceTracker app has been loaded");
+    const user = get(currentUser);
+    if (!user) {
+      console.log("No user found, redirecting to CreateProfile");
+      goto("/CreateProfile");
+    } else {
+      console.log("User found:", user);
+    }
+
+    if ($currentUser) {
+      const res = await fetch(
+        `http://localhost:8000/users/${$currentUser.id}/transaction_groups`,
+      );
+      if (res.ok) {
+        transactionGroups = await res.json();
+        console.log("Transaction groups fetched:", transactionGroups);
+      } else {
+        console.error("Failed to fetch transaction groups");
+      }
+    }
   });
 
-  $: currentPage = $page.url.pathname;
+  // $: currentPage = $page.url.pathname;
 </script>
 
-<h1>Welcome to FinanceTracker</h1>
-<p></p>
+{#if $currentUser}
+  <h1>Welcome to FinanceTracker, {$currentUser.username}!</h1>
+  <button onclick={goto("/CreateTransactionGroup")}>
+    Create a Transaction Group
+  </button>
 
-<form on:submit|preventDefault={createProfile}>
-  <label for="username">Enter your username:</label>
-  <input
-    id="username"
-    type="string"
-    bind:value={username}
-    placeholder="Enter your username"
-    required
-  />
-  <label for="amount">Enter existing balance:</label>
-  <input
-    id="amount"
-    type="number"
-    bind:value={amount}
-    placeholder="Enter your existing balance"
-    required
-  />
-  <button type="submit">Submit</button>
-</form>
+  <!-- Dropdown to select transaction group -->
+  <label for="groupSelect">View a Transaction Group:</label>
+  <select id="groupSelect" bind:value={selectedTransactionGroupId}>
+    <option value="" disabled selected>Select a group</option>
+    {#each transactionGroups as group}
+      <option value={group.id}>{group.name}</option>
+    {/each}
+  </select>
+  <button onclick={goToTransactionGroup}>Go</button>
 
-{#if userExistsMessage}
-  <p style="color: red;">{userExistsMessage}</p>
+  <AddTransaction />
+{:else}
+  <h1>Redirecting to profile setup...</h1>
 {/if}
