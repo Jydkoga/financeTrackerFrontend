@@ -5,52 +5,43 @@
   import { goto } from "$app/navigation";
 
   let username = "";
-  let amount = 0;
+  let password = "";
+  let amount = 0.0;
   let userExistsMessage = "";
 
   let url = "http://localhost:8000";
 
   async function createProfile(event) {
     event.preventDefault();
-
     try {
-      // First, check if the user already exists
-      const checkResponse = await fetch(
-        url + `/users/lookup?username=${encodeURIComponent(username)}`,
-      );
-
-      if (checkResponse.status === 200) {
-        const existingUser = await checkResponse.json();
-        if (existingUser && !existingUser.error) {
-          console.log("i got here");
-          userExistsMessage = "User already exists";
-          currentUser.set({
-            id: existingUser.id,
-            username: existingUser.username,
-          });
-          console.log("User already exists:", existingUser);
-          goto("/");
-          return; // Exit early if user exists
-        }
-      }
-
-      userExistsMessage = ""; // Clear previous message
-
-      const response = await fetch(url + "/users/add", {
+      const createResponse = await fetch(url + "/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username: username, total_balance: amount }),
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          total_balance: amount,
+        }),
       });
-      const data = await response.json();
-      console.log("Server response:", data);
 
-      if (data && data.id && data.username) {
+      const data = await createResponse.json();
+      console.log("Create Profile Response:", data);
+
+      if (createResponse.ok && data.id && data.username) {
         currentUser.set({ id: data.id, username: data.username });
+        goto("/");
+      } else {
+        userExistsMessage = "Could not create user";
       }
+      return;
+
+      userExistsMessage = "Login failed.";
     } catch (error) {
-      console.error("Error checking or creating user:", error);
+      console.error("Error logging in or creating user:", error);
+      userExistsMessage =
+        "An unexpected error occurred. Please try again later.";
     }
   }
 
@@ -59,9 +50,12 @@
   });
 </script>
 
-<h1>Log In or Create Your Profile</h1>
+<h1>Create an Account</h1>
 
-<p>Please enter your username to log in or create a new profile.</p>
+<p>
+  Please enter a username and password. Also, please add an initial balance to
+  your account.
+</p>
 <form on:submit|preventDefault={createProfile}>
   <label for="username">Enter your username:</label>
   <input
@@ -71,7 +65,25 @@
     placeholder="Enter your username"
     required
   />
-  <button type="submit">Submit</button>
+  <label for="password">Enter your password:</label>
+  <input
+    id="password"
+    type="password"
+    bind:value={password}
+    placeholder="Enter your password"
+    required
+  />
+  <label for="amount">Initial Balance:</label>
+  <input
+    id="amount"
+    type="text"
+    inputmode="decimal"
+    pattern="^[0-9]*\.?[0-9]+$"
+    bind:value={amount}
+    placeholder="Enter your initial balance"
+    required
+  />
+  <button type="submit">Create Account</button>
 </form>
 
 {#if userExistsMessage}

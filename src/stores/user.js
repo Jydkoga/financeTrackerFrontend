@@ -11,13 +11,16 @@ if (typeof window !== 'undefined') {
     isAuthenticated.set(true);
   }
 
-  currentUser.subscribe(value => {
-    if (value) {
-      localStorage.setItem('currentUser', JSON.stringify(value));
-      isAuthenticated.set(true);
-    } else {
-      localStorage.removeItem('currentUser');
-      isAuthenticated.set(false);
-    }
-  });
+  // Defer subscription setup until after initial restore
+  setTimeout(() => {
+    currentUser.subscribe(value => {
+      if (value) {
+        localStorage.setItem('currentUser', JSON.stringify(value));
+        isAuthenticated.set(true);
+      } else {
+        localStorage.removeItem('currentUser');
+        isAuthenticated.set(false);
+      }
+    })
+  })
 }

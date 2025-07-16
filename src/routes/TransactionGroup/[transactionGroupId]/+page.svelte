@@ -3,6 +3,8 @@
   import { page } from "$app/stores";
   import { currentUser } from "../../../stores/user.js";
   import { goto } from "$app/navigation";
+  import AddTransaction from "../../AddTransaction.svelte";
+  import Header from "../../Header.svelte";
 
   const options = {
     chart: { type: "pie" },
@@ -68,11 +70,28 @@
   }
 </script>
 
-{#if transactionGroup}
-  <h1>{transactionGroup.name}</h1>
-  <p>{transactionGroup.description}</p>
-  <p>Total: ${transactionGroup.total}</p>
-  {#if ApexCharts}
-    <ApexCharts {options} {series} type="pie" height="350" />
-  {/if}
+<Header />
+
+{#if !transactionGroup}
+  <p>Loading transaction group...</p>
+{:else}
+  <div>
+    <h1>{transactionGroup.name}</h1>
+    <p>{transactionGroup.description}</p>
+    <p>Total: ${transactionGroup.total}</p>
+    {#if ApexCharts}
+      <ApexCharts {options} {series} type="pie" height="350" />
+    {/if}
+    <!-- Display transactions -->
+    <h2>Transactions</h2>
+    <ul>
+      {#each transactionGroup.transactions as transaction}
+        <li>
+          <strong>{transaction.title}</strong> - ${transaction.amount}
+          <p>{transaction.description}</p>
+        </li>
+      {/each}
+    </ul>
+    <AddTransaction {transactionGroup} />
+  </div>
 {/if}

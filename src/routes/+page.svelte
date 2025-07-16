@@ -22,8 +22,8 @@
     console.log("FinanceTracker app has been loaded");
     const user = get(currentUser);
     if (!user) {
-      console.log("No user found, redirecting to CreateProfile");
-      goto("/CreateProfile");
+      console.log("No user found, redirecting to Log In Page");
+      goto("/LogIn");
     } else {
       console.log("User found:", user);
     }
@@ -46,7 +46,7 @@
 
 {#if $currentUser}
   <h1>Welcome to FinanceTracker, {$currentUser.username}!</h1>
-  <button onclick={goto("/CreateTransactionGroup")}>
+  <button onclick={() => goto("/CreateTransactionGroup")}>
     Create a Transaction Group
   </button>
 
@@ -55,7 +55,7 @@
   <select id="groupSelect" bind:value={selectedTransactionGroupId}>
     <option value="" disabled selected>Select a group</option>
     {#each transactionGroups as group}
-      <option value={group.id}>{group.name}</option>
+      <option value={group.id}>{group.title}</option>
     {/each}
   </select>
   <button onclick={goToTransactionGroup}>Go</button>
