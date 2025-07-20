@@ -37,19 +37,6 @@
     } else {
       console.log("User found:", user);
       transactionGroup = await fetchTransactionGroup(transactionGroupId);
-      // populating pie chart data
-      //   if (transactionGroup && transactionGroup.transactions) {
-      //     const categoryTotals = {};
-      //     for (const tx of transactionGroup.transactions) {
-      //       if (!categoryTotals[tx.category]) {
-      //         categoryTotals[tx.category] = 0;
-      //       }
-      //       categoryTotals[tx.category] += tx.amount;
-      //     }
-
-      //     options.labels = Object.keys(categoryTotals);
-      //     series = Object.values(categoryTotals);
-      //   }
     }
   });
 
@@ -75,23 +62,88 @@
 {#if !transactionGroup}
   <p>Loading transaction group...</p>
 {:else}
-  <div>
-    <h1>{transactionGroup.name}</h1>
+  <div class="transaction-group-display-container">
+    <h1>{transactionGroup.title}</h1>
     <p>{transactionGroup.description}</p>
     <p>Total: ${transactionGroup.total}</p>
     {#if ApexCharts}
       <ApexCharts {options} {series} type="pie" height="350" />
     {/if}
-    <!-- Display transactions -->
     <h2>Transactions</h2>
     <ul>
       {#each transactionGroup.transactions as transaction}
-        <li>
-          <strong>{transaction.title}</strong> - ${transaction.amount}
+        <li class="transaction-item">
+          <div class="transaction-meta">
+            <span class="transaction-date"
+              >{new Date(transaction.date_spent).toLocaleDateString()}</span
+            >
+            <span class="transaction-title">{transaction.title}</span>
+            <span>${transaction.amount}</span>
+          </div>
+          <p><strong>Category:</strong> {transaction.category_id}</p>
           <p>{transaction.description}</p>
         </li>
       {/each}
     </ul>
-    <AddTransaction {transactionGroup} />
   </div>
+  <AddTransaction {transactionGroup} />
 {/if}
+
+<style>
+  h1 {
+    font-size: 60px;
+    padding: 0;
+    margin: 0;
+  }
+  .transaction-group-display-container {
+    display: flex;
+    flex-direction: column;
+    /* gap: 2rem;
+    padding: 2rem; */
+    max-width: 800px;
+    margin: 0 auto;
+    /* align-items: center;
+    justify-content: center; */
+  }
+  .transaction-item {
+    background: #f9f9f9;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+  .transaction-item p {
+    margin: 5px 0;
+    font-size: 20px;
+    color: #444;
+  }
+  .transaction-title {
+    font-weight: bold;
+    font-size: 30px;
+    margin-right: 10px;
+  }
+
+  .transaction-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+  }
+
+  .transaction-date {
+    padding-right: 15px;
+  }
+
+  /* h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  } */
+</style>

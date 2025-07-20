@@ -15,6 +15,8 @@
   let transactionCategory = "";
   let categories = [];
 
+  let selectedFile = null;
+
   let url = "http://localhost:8000";
 
   onMount(async () => {
@@ -95,6 +97,26 @@
         transactionDescription = "";
         transactionCategory = "";
         transactionDateSpent = "";
+        console.log("Selected file:", selectedFile);
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append("receipt", selectedFile);
+          formData.append("transaction_group_id", transactionGroup.id);
+
+          const receiptUploadRes = await fetch(
+            `${url}/transactions/${data.id}/receipt/add`,
+            {
+              method: "POST",
+              body: formData,
+            },
+          );
+
+          if (receiptUploadRes.ok) {
+            console.log("Receipt uploaded successfully");
+          } else {
+            console.error("Failed to upload receipt");
+          }
+        }
       } else {
         console.error("Failed to add transaction:", response.statusText);
       }
@@ -131,6 +153,14 @@
     <label>
       Description:
       <textarea bind:value={transactionDescription}></textarea>
+    </label>
+    <label>
+      Receipt Image:
+      <input
+        type="file"
+        accept="image/*"
+        on:change={(e) => (selectedFile = e.target.files[0])}
+      />
     </label>
 
     {#if transactionGroup}

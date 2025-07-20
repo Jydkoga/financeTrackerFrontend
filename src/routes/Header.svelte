@@ -6,6 +6,7 @@
 
   let transactionGroups = [];
   let url = "http://localhost:8000";
+  let showDropdown = false;
 
   onMount(async () => {
     const user = get(currentUser);
@@ -15,9 +16,10 @@
       return;
     }
     console.log("Header component has been mounted");
-    const res = await fetch(`${url}/${user.id}/transaction_groups`);
+    const res = await fetch(`${url}/users/${user.id}/transaction_groups`);
     if (res.ok) {
       transactionGroups = await res.json();
+      console.log("Transaction groups fetched:", transactionGroups);
     } else {
       console.error("Failed to fetch transaction groups");
     }
@@ -31,13 +33,12 @@
         <img src="/logo.png" alt="Logo" class="logo" />
       </button>
       <div class="dropdown">
-        <button class="dropbtn">
+        <button class="dropbtn" on:click={() => (showDropdown = !showDropdown)}>
           Transaction groups
           <i class="fa fa-caret-down"></i>
         </button>
-        <div class="dropdownContent">
+        <div class="dropdownContent" class:show={showDropdown}>
           {#each transactionGroups as group}
-            console.log("Group:", group);
             <button
               class="dropdownLink"
               on:click={() => goto(`/TransactionGroup/${group.id}`)}
@@ -96,14 +97,9 @@
     position: absolute;
     background-color: #f9f9f9;
     min-width: 160px;
-    z-index: 1;
+    z-index: 100;
   }
-
-  .dropdown:hover .dropdownContent {
+  .dropdownContent.show {
     display: block;
-  }
-
-  .dropdown:hover .dropbtn {
-    background-color: #2980b9;
   }
 </style>
